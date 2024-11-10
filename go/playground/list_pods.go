@@ -30,7 +30,8 @@ func main() {
 		panic(err.Error())
 	}
 
-	ListPodsInNamespace(clientset, "kube-system")
+	//ListPodsInNamespace(clientset, "kube-system")
+	ListPods(clientset,false)
 
 }
 
@@ -42,7 +43,7 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // Windows
 }
 
-func ListPods(clientset *kubernetes.Clientset) {
+func ListPods(clientset *kubernetes.Clientset, labels bool) {
 	//List all the pods in the cluster
 	fmt.Println("Pods in the cluster: ")
 
@@ -56,12 +57,14 @@ func ListPods(clientset *kubernetes.Clientset) {
 	for _, pod := range pods.Items {
 		//Print Name and Namespace of the pod
 		fmt.Printf("%d Pod name: %s, Namesapce: %s\n", itr, pod.Name, pod.Namespace)
+		
+		if labels == true {
+			//Print labels for the pod
+			for label, value := range pod.Labels {
+				fmt.Printf("\t%s:%s\n", label, value)
+			}
 
-		//Print labels for the pod
-		for label, value := range pod.Labels {
-			fmt.Printf("\t%s:%s\n", label, value)
 		}
-
 		itr += 1
 	}
 
@@ -84,17 +87,3 @@ func ListPodsInNamespace(clientset *kubernetes.Clientset, namespace string) {
 	}
 }
 
-// List all services in the cluster
-func ListServices(clientset *kubernetes.Clientset) {
-	fmt.Println("Services in the cluster:")
-
-	services, err := clientset.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{})
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	for _, svc := range services.Items {
-		fmt.Printf("Service Name: %s, Namespace: %s, Type: %s\n", svc.Name, svc.Namespace, svc.Spec.Type)
-	}
-}
