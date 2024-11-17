@@ -30,8 +30,8 @@ func main() {
 		panic(err.Error())
 	}
 
-	//ListPodsInNamespace(clientset, "kube-system")
-	ListPods(clientset,false)
+	ListPodsInNamespace(clientset, "local",false,true)
+	//ListPods(clientset,false,true)
 
 }
 
@@ -43,7 +43,7 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // Windows
 }
 
-func ListPods(clientset *kubernetes.Clientset, labels bool) {
+func ListPods(clientset *kubernetes.Clientset, showLabels bool, showOwnerRef bool) {
 	//List all the pods in the cluster
 	fmt.Println("Pods in the cluster: ")
 
@@ -56,22 +56,32 @@ func ListPods(clientset *kubernetes.Clientset, labels bool) {
 	itr := 1
 	for _, pod := range pods.Items {
 		//Print Name and Namespace of the pod
-		fmt.Printf("%d Pod name: %s, Namesapce: %s\n", itr, pod.Name, pod.Namespace)
+    fmt.Printf("%d Pod name: %s, Namesapce: %s, Parent: %s\n", itr, pod.Name, pod.Namespace)
 		
-		if labels == true {
+		if showLabels == true {
 			//Print labels for the pod
 			for label, value := range pod.Labels {
 				fmt.Printf("\t%s:%s\n", label, value)
 			}
 
 		}
+
+    if showOwnerRef == true {
+      ownerReferences := pod.OwnerReferences;
+      fmt.Printf("\t%v\n",ownerReferences) 
+      /*
+      for _, ownerRef := range ownerReferences.Items {
+        fmt.Printf("\t%s \n", ownerRef.Name)
+      }
+      */
+    }
 		itr += 1
 	}
 
 }
 
 // List all the pods in a namespace
-func ListPodsInNamespace(clientset *kubernetes.Clientset, namespace string) {
+func ListPodsInNamespace(clientset *kubernetes.Clientset, namespace string, showLabels bool, showOwnerRef bool) {
 	fmt.Printf("Pods in the '%s' namespace\n", namespace)
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -83,6 +93,17 @@ func ListPodsInNamespace(clientset *kubernetes.Clientset, namespace string) {
 	itr := 1
 	for _, pod := range pods.Items {
 		fmt.Printf("%d Pod name: %s, Namespace: %s\n", itr, pod.Name, pod.Namespace)
+
+    if showOwnerRef == true {
+      ownerReferences := pod.OwnerReferences;
+      fmt.Printf("\t%v\n",ownerReferences) 
+      /*
+      for _, ownerRef := range ownerReferences.Items {
+        fmt.Printf("\t%s \n", ownerRef.Name)
+      }
+      */
+    }
+
 		itr += 1
 	}
 }
